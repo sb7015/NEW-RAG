@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Division Knowledge Management - Agentic RAG Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #281849 0%, #5009B5 100%);
+            padding: 20px;
+            min-height: 100vh;
+            color: #231E33;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: #F5F5F5;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(40, 24, 73, 0.4);
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #00BEBA;
+        }
+        
+        .header h1 {
+            color: #281849;
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        
+        .header .subtitle {
+            color: #5009B5;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .architecture {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .left-section {
+            flex: 0 0 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .middle-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .right-section {
+            flex: 0 0 340px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .component-box {
+            background: white;
+            border: 2px solid #EBE4FF;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(80, 9, 181, 0.1);
+        }
+        
+        .component-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #281849;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .component-number {
+            background: #00BEBA;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .component-content {
+            font-size: 12px;
+            color: #231E33;
+            line-height: 1.6;
+        }
+        
+        .component-content ul {
+            margin-left: 15px;
+            margin-top: 8px;
+        }
+        
+        .component-content li {
+            margin-bottom: 5px;
+        }
+        
+        .aws-service {
+            background: #794CFF;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        
+        .agent-box {
+            background: linear-gradient(135deg, #EBE4FF 0%, #D9F5F5 100%);
+            border: 2px solid #00BEBA;
+        }
+        
+        .orchestration-box {
+            background: linear-gradient(135deg, #5009B5 0%, #794CFF 100%);
+            border: 2px solid #281849;
+            color: white;
+        }
+        
+        .orchestration-box .component-title,
+        .orchestration-box .component-content {
+            color: white;
+        }
+        
+        .data-box {
+            background: linear-gradient(135deg, #E1EDFF 0%, #D9F5F5 100%);
+            border: 2px solid #00B5F5;
+        }
+        
+        .user-box {
+            background: linear-gradient(135deg, #F5F5F5 0%, #EBE4FF 100%);
+            border: 2px solid #794CFF;
+            text-align: center;
+        }
+        
+        .user-icon {
+            font-size: 40px;
+            margin: 10px 0;
+        }
+        
+        .flow-diagram {
+            background: white;
+            border: 2px dashed #00BEBA;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .flow-title {
+            font-weight: 700;
+            color: #281849;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #F5F5F5;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #00BEBA;
+        }
+        
+        .flow-step-number {
+            background: #00BEBA;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .flow-step-text {
+            font-size: 13px;
+            color: #231E33;
+            line-height: 1.5;
+        }
+        
+        .tech-stack {
+            background: #281849;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .tech-stack-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #00BEBA;
+        }
+        
+        .tech-stack-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tech-item {
+            background: rgba(0, 190, 186, 0.2);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid #00BEBA;
+        }
+        
+        .connector {
+            position: relative;
+        }
+        
+        .arrow {
+            color: #00BEBA;
+            font-size: 24px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .highlight {
+            background: #D9F5F5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #00BEBA;
+        }
+        
+        .json-output {
+            background: #231E33;
+            color: #D9F5F5;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            margin-top: 8px;
+        }
+        
+        .citation-box {
+            background: linear-gradient(135deg, #D9F5F5 0%, #E1EDFF 100%);
+            border: 2px solid #00BEBA;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .citation-title {
+            color: #281849;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .citation-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .citation-step {
+            background: white;
+            border: 2px solid #EBE4FF;
+            border-radius: 8px;
+            padding: 12px;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .citation-step-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .citation-step-text {
+            font-size: 12px;
+            color: #231E33;
+            font-weight: 600;
+        }
+        
+        .citation-arrow {
+            color: #00BEBA;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .link-preview {
+            background: #231E33;
+            color: #00BEBA;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        
+        .feature-tag {
+            display: inline-block;
+            background: #00BEBA;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Multi-Division Knowledge Management System</h1>
+            <div class="subtitle">Agentic RAG Architecture with Clickable Page-Level Citations</div>
+        </div>
+
+        <!-- Citation Feature Highlight -->
+        <div class="citation-box">
+            <div class="citation-title">
+                🔗 Clickable Citation Navigation <span class="feature-tag">NEW</span>
+            </div>
+            <div style="color: #5009B5; font-size: 14px; margin-bottom: 15px;">
+                Every citation includes an S3 pre-signed URL with page anchor, allowing users to click and jump directly to the source page in the original document.
+            </div>
+            <div class="citation-flow">
+                <div class="citation-step">
+                    <div class="citation-step-icon">📄</div>
+                    <div class="citation-step-text">Textract extracts<br>Page + Bounding Box</div>
+                </div>
+                <div class="citation-arrow">→</div>
+                <div class="citation-step">
+                    <div class="citation-step-icon">🗂️</div>
+                    <div class="citation-step-text">Metadata stores<br>S3 Path + Page Num</div>
+                </div>
+                <div class="citation-arrow">→</div>
+                <div class="citation-step">
+                    <div class="citation-step-icon">🔗</div>
+                    <div class="citation-step-text">Agent generates<br>Clickable links</div>
+                </div>
+                <div class="citation-arrow">→</div>
+                <div class="citation-step">
+                    <div class="citation-step-icon">👆</div>
+                    <div class="citation-step-text">User clicks<br>Goes to exact page</div>
+                </div>
+            </div>
+            <div class="link-preview">
+https://s3.amazonaws.com/docs-bucket/hr/policies/leave-policy.pdf?<br>
+X-Amz-Signature=xxx...&X-Amz-Expires=3600#page=12
+            </div>
+        </div>
+        
+        <div class="architecture">
+            <!-- LEFT SECTION: Data Ingestion & User -->
+            <div class="left-section">
+                <!-- User Interface -->
+                <div class="component-box user-box">
+                    <div class="user-icon">👤</div>
+                    <div class="component-title">End Users</div>
+                    <div class="component-content">
+                        <ul>
+                            <li>Click citations to open source documents</li>
+                            <li>Automatic navigation to exact page</li>
+                            <li>View highlighted context in original PDF</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Data Ingestion -->
+                <div class="component-box data-box">
+                    <div class="component-title">
+                        <span class="component-number">1</span>
+                        Data Ingestion & Processing
+                    </div>
+                    <div class="component-content">
+                        <strong>Source:</strong> OneDrive/SharePoint via AppFlow
+                        <ul>
+                            <li>Sync every 3-5 hours to S3</li>
+                            <li>Preserve folder hierarchy</li>
+                            <li><span class="highlight">S3 metadata:</span> page_count, division, doc_type</li>
+                        </ul>
+                        <div class="aws-service">Amazon S3</div>
+                        <div class="aws-service">AWS AppFlow</div>
+                    </div>
+                </div>
+                
+                <!-- Vector Indexing -->
+                <div class="component-box data-box">
+                    <div class="component-title">
+                        <span class="component-number">2</span>
+                        OCR & Indexing Pipeline
+                    </div>
+                    <div class="component-content">
+                        <ul>
+                            <li><strong>Textract:</strong> OCR + bounding box detection</li>
+                            <li><strong>Metadata capture:</strong> page_number, geometry</li>
+                            <li><strong>Embedding:</strong> Cohere Embed v3</li>
+                            <li><strong>Index:</strong> Pinecone with page metadata</li>
+                        </ul>
+                        <div class="aws-service">Amazon Textract</div>
+                        <div class="aws-service">Cohere Embed v3</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MIDDLE SECTION: Agent Orchestration -->
+            <div class="middle-section">
+                <div class="orchestration-box">
+                    <div class="component-title">
+                        <span class="component-number">3</span>
+                        2-Agent Orchestration with Citation Links
+                    </div>
+                    <div class="component-content">
+                        <strong>Research Agent generates S3 pre-signed URLs with page anchors</strong>
+                    </div>
+                </div>
+                
+                <!-- Agents Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <!-- Router/Security Agent -->
+                    <div class="component-box agent-box">
+                        <div class="component-title">
+                            <span class="component-number">A</span>
+                            Router & Security Agent
+                        </div>
+                        <div class="component-content">
+                            <ul>
+                                <li>Verify user permissions (Cognito)</li>
+                                <li>Check division access rights</li>
+                                <li>Generate fresh S3 pre-signed URLs (1-hour expiry)</li>
+                            </ul>
+                            <div class="json-output">
+{
+  "user_id": "emp123",
+  "allowed_divisions": ["HR","Finance"],
+  "s3_access": true
+}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Research Agent -->
+                    <div class="component-box agent-box">
+                        <div class="component-title">
+                            <span class="component-number">B</span>
+                            Research Engine Agent
+                        </div>
+                        <div class="component-content">
+                            <ul>
+                                <li>Query Pinecone (with division filters)</li>
+                                <li>Retrieve chunks with page metadata</li>
+                                <li><strong>Generate citation links:</strong> S3 URL + #page=X</li>
+                            </ul>
+                            <div class="json-output">
+{
+  "citation": {
+    "text": "Employees receive 20 PTO days...",
+    "source": "hr-policies/leave-policy.pdf",
+    "page": 12,
+    "url": "https://s3.../leave-policy.pdf?sig=xxx#page=12"
+  }
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Citation Implementation Detail -->
+                <div style="background: white; border: 2px solid #00BEBA; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                    <div style="font-weight: 700; color: #281849; margin-bottom: 10px;">🔗 Citation Link Generation Flow</div>
+                    <div style="font-size: 12px; color: #231E33; line-height: 1.6;">
+                        <strong>1. Retrieval:</strong> Agent gets chunk from Pinecone with metadata {s3_path: "hr/policies.pdf", page: 12}<br>
+                        <strong>2. URL generation:</strong> Lambda generates pre-signed URL (valid 1 hour) with <code>#page=12</code> anchor<br>
+                        <strong>3. Frontend:</strong> React renders clickable link: <em>"Source: Leave Policy, <a href="#">Page 12</a>"</em><br>
+                        <strong>4. Click:</strong> Browser opens PDF viewer directly on page 12 (PDF.js, Chrome PDF viewer, or Adobe)
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RIGHT SECTION: Backend Services & Output -->
+            <div class="right-section">
+                <!-- Backend Services -->
+                <div class="component-box">
+                    <div class="component-title">
+                        <span class="component-number">4</span>
+                        Citation Link Service
+                    </div>
+                    <div class="component-content">
+                        <strong>Lambda Function:</strong> generate_citation_link()
+                        <ul>
+                            <li><span class="highlight">Input:</span> s3_key, page_number, user_id</li>
+                            <li><span class="highlight">Auth:</span> Verify user has division access</li>
+                            <li><span class="highlight">Output:</span> Pre-signed URL (3600s expiry)</li>
+                        </ul>
+                        <strong>Supported Formats:</strong>
+                        <ul>
+                            <li>PDF: <code>#page=X</code> (universal support)</li>
+                            <li>Word: Convert to PDF on-demand or use Office Online</li>
+                        </ul>
+                        <div class="aws-service">Lambda (URL Generator)</div>
+                        <div class="aws-service">S3 Pre-signed URLs</div>
+                    </div>
+                </div>
+                
+                <!-- Output Generation -->
+                <div class="component-box" style="background: linear-gradient(135deg, #EBE4FF 0%, #D9F5F5 100%); border: 2px solid #794CFF;">
+                    <div class="component-title">
+                        <span class="component-number">5</span>
+                        Interactive Response
+                    </div>
+                    <div class="component-content">
+                        <strong>Answer Format:</strong>
+                        <ul>
+                            <li>Hyperlinked citations [Page 12]</li>
+                            <li>Opens in new tab to S3 document</li>
+                            <li>Auto-scrolls to exact page</li>
+                        </ul>
+                        <strong>Security:</strong>
+                        <ul>
+                            <li>URLs expire after 1 hour (configurable)</li>
+                            <li>Access logged in CloudTrail</li>
+                            <li>IAM validation on every link generation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Workflow Section -->
+        <div class="flow-diagram">
+            <div class="flow-title">📋 End-to-End Workflow with Citation Navigation</div>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-text">AppFlow syncs documents from SharePoint to S3 with division prefixes</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-text">Textract OCR extracts text + <strong>page geometry</strong> (bounding boxes) + page numbers</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-text">Lambda stores in Pinecone: vector + metadata {s3_path, page_num, division}</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-text">User asks: <em>"What's the remote work policy?"</em></div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">5</div>
+                    <div class="flow-step-text"><strong>Router Agent</strong> validates permissions, generates fresh S3 pre-signed URL capability</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">6</div>
+                    <div class="flow-step-text"><strong>Research Agent</strong> retrieves chunks, generates answer with <strong>clickable citation links</strong> (URL#page=X)</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">7</div>
+                    <div class="flow-step-text">User clicks citation link <em>[Source: Policy PDF, Page 12]</em> → Browser opens PDF directly on page 12</div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">8</div>
+                    <div class="flow-step-text">CloudTrail logs document access, citation click analytics recorded in DynamoDB</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tech Stack -->
+        <div class="tech-stack">
+            <div class="tech-stack-title">🛠️ Technology Stack</div>
+            <div class="tech-stack-items">
+                <div class="tech-item">AWS Bedrock (Claude 3.5)</div>
+                <div class="tech-item">2-Agent Architecture</div>
+                <div class="tech-item">Amazon Textract (OCR)</div>
+                <div class="tech-item">Cohere Embed v3</div>
+                <div class="tech-item">S3 Pre-signed URLs</div>
+                <div class="tech-item">Pinecone Serverless</div>
+                <div class="tech-item">AWS AppFlow</div>
+                <div class="tech-item">CloudTrail Audit</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
