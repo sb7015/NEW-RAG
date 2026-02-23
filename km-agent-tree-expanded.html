@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>km-agent — Expanded Tree</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #090c10;
+  min-height: 100vh;
+  padding: 48px 24px 80px;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── WINDOW ─────────────────────────────────────────────────────── */
+.win {
+  width: 100%;
+  max-width: 940px;
+  background: #0d1117;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.07),
+    0 40px 80px rgba(0,0,0,0.7),
+    0 0 120px rgba(88,166,255,0.03);
+}
+
+.titlebar {
+  background: #161b22;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.dots { display:flex; gap:7px; }
+.dot { width:12px; height:12px; border-radius:50%; }
+.dot.r { background:#ff5f57; }
+.dot.y { background:#febc2e; }
+.dot.g { background:#28c840; }
+.tb-title { flex:1; text-align:center; font-size:11.5px; color:#8b949e; letter-spacing:.5px; }
+
+/* ── BODY ───────────────────────────────────────────────────────── */
+.body { padding: 32px 36px 44px; }
+
+/* prompt */
+.prompt {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 28px; flex-wrap: wrap;
+}
+.pu  { color:#3fb950; font-size:12.5px; font-weight:700; }
+.pat { color:#555f6d; font-size:12.5px; }
+.ph  { color:#58a6ff; font-size:12.5px; font-weight:700; }
+.pp  { color:#d2a8ff; font-size:12.5px; }
+.ps  { color:#555f6d; font-size:12.5px; }
+.pc  { color:#e6edf3; font-size:12.5px; }
+.cursor {
+  display:inline-block; width:8px; height:13px;
+  background:#58a6ff; vertical-align:middle; margin-left:2px;
+  animation: blink 1.1s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ── TREE ───────────────────────────────────────────────────────── */
+.tree { font-size: 13px; line-height: 1; }
+
+/* every visible line */
+.tl {
+  display: flex;
+  align-items: flex-start;
+  min-height: 24px;
+  padding: 2px 4px 2px 0;
+  border-radius: 5px;
+  transition: background .12s;
+  cursor: default;
+}
+.tl:hover { background: rgba(255,255,255,0.035); }
+
+/* connector string */
+.cn {
+  color: #272e38;
+  white-space: pre;
+  flex-shrink: 0;
+  line-height: 24px;
+  user-select: none;
+}
+
+/* ── DIRECTORY LINE ── */
+.dir-icon { font-size:13px; margin-right:7px; line-height:24px; flex-shrink:0; }
+.dir-name { color:#58a6ff; font-weight:700; line-height:24px; }
+.dir-note { color:#555f6d; font-size:11.5px; line-height:24px; margin-left:8px; }
+
+/* ── FILE LINE ── */
+.file-wrap { display:flex; align-items:center; flex-wrap:wrap; gap:6px; min-height:24px; }
+.fnum {
+  font-size:10px; font-weight:700; color:#f0883e;
+  background:rgba(240,136,62,.1); border:1px solid rgba(240,136,62,.2);
+  border-radius:3px; padding:1px 5px; flex-shrink:0; line-height:18px;
+}
+.ficon { font-size:12px; flex-shrink:0; }
+.fbadge {
+  font-size:9.5px; font-weight:700; padding:1px 6px;
+  border-radius:3px; flex-shrink:0; letter-spacing:.4px;
+}
+.fname { font-weight:600; }
+.farrow { color:#444d56; margin:0 4px; }
+.fnote  { color:#555f6d; font-size:11.5px; }
+
+/* ── FUNCTION BRANCH ── */
+.fn-line {
+  display: flex;
+  align-items: flex-start;
+  min-height: 22px;
+  padding: 1px 4px 1px 0;
+  border-radius:4px;
+  transition: background .12s;
+  cursor: default;
+}
+.fn-line:hover { background: rgba(255,255,255,0.025); }
+
+.fn-cn {
+  color: #1e2630;
+  white-space: pre;
+  flex-shrink: 0;
+  line-height: 22px;
+  user-select: none;
+}
+
+.fn-wrap { display:flex; align-items:flex-start; flex-wrap:wrap; gap:4px; min-height:22px; }
+
+.fn-sig {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 22px;
+  flex-shrink: 0;
+}
+.fn-arrow { color:#333d47; margin:0 5px; line-height:22px; flex-shrink:0; }
+.fn-desc {
+  font-size: 11px;
+  color: #8b949e;
+  line-height: 22px;
+  font-style: italic;
+}
+.fn-call {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  line-height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── SECTION GAP ── */
+.gap { height: 10px; }
+.gap-sm { height: 4px; }
+
+/* ── BADGE / FILE COLOURS ── */
+/* Entry */
+.c-entry  { color:#00d4ff; }
+.b-entry  { background:rgba(0,212,255,.1); color:#00d4ff; border:1px solid rgba(0,212,255,.2); }
+.fn-entry { color:#7dd3fc; }
+.fc-entry { background:rgba(0,212,255,.08); color:#0ea5e9; border:1px solid rgba(14,165,233,.2); }
+
+/* Utility */
+.c-util  { color:#4ade80; }
+.b-util  { background:rgba(74,222,128,.1); color:#4ade80; border:1px solid rgba(74,222,128,.2); }
+.fn-util { color:#86efac; }
+.fc-util { background:rgba(74,222,128,.08); color:#22c55e; border:1px solid rgba(34,197,94,.2); }
+
+/* DB */
+.c-db  { color:#2dd4bf; }
+.b-db  { background:rgba(45,212,191,.1); color:#2dd4bf; border:1px solid rgba(45,212,191,.2); }
+.fn-db { color:#5eead4; }
+.fc-db { background:rgba(45,212,191,.08); color:#14b8a6; border:1px solid rgba(20,184,166,.2); }
+
+/* Agent Orch */
+.c-orch  { color:#c084fc; }
+.b-orch  { background:rgba(192,132,252,.1); color:#c084fc; border:1px solid rgba(192,132,252,.2); }
+.fn-orch { color:#d8b4fe; }
+.fc-orch { background:rgba(192,132,252,.08); color:#a855f7; border:1px solid rgba(168,85,247,.2); }
+
+/* Agent Retrieval */
+.c-ret  { color:#60a5fa; }
+.b-ret  { background:rgba(96,165,250,.1); color:#60a5fa; border:1px solid rgba(96,165,250,.2); }
+.fn-ret { color:#93c5fd; }
+.fc-ret { background:rgba(96,165,250,.08); color:#3b82f6; border:1px solid rgba(59,130,246,.2); }
+
+/* Agent Validation */
+.c-val  { color:#fb923c; }
+.b-val  { background:rgba(251,146,60,.1); color:#fb923c; border:1px solid rgba(251,146,60,.2); }
+.fn-val { color:#fdba74; }
+.fc-val { background:rgba(251,146,60,.08); color:#f97316; border:1px solid rgba(249,115,22,.2); }
+
+/* Tool 1 */
+.c-t1  { color:#a3e635; }
+.b-t1  { background:rgba(163,230,53,.1); color:#a3e635; border:1px solid rgba(163,230,53,.2); }
+.fn-t1 { color:#bef264; }
+.fc-t1 { background:rgba(163,230,53,.08); color:#84cc16; border:1px solid rgba(132,204,22,.2); }
+
+/* Tool 2 */
+.c-t2  { color:#22d3ee; }
+.b-t2  { background:rgba(34,211,238,.1); color:#22d3ee; border:1px solid rgba(34,211,238,.2); }
+.fn-t2 { color:#67e8f9; }
+.fc-t2 { background:rgba(34,211,238,.08); color:#06b6d4; border:1px solid rgba(6,182,212,.2); }
+
+/* Tool 3 */
+.c-t3  { color:#f87171; }
+.b-t3  { background:rgba(248,113,113,.1); color:#f87171; border:1px solid rgba(248,113,113,.2); }
+.fn-t3 { color:#fca5a5; }
+.fc-t3 { background:rgba(248,113,113,.08); color:#ef4444; border:1px solid rgba(239,68,68,.2); }
+
+/* Monitor */
+.c-mon  { color:#94a3b8; }
+.b-mon  { background:rgba(148,163,184,.1); color:#94a3b8; border:1px solid rgba(148,163,184,.2); }
+.fn-mon { color:#cbd5e1; }
+.fc-mon { background:rgba(148,163,184,.08); color:#64748b; border:1px solid rgba(100,116,139,.2); }
+
+/* Config */
+.c-cfg  { color:#6b7280; }
+.fn-cfg { color:#9ca3af; }
+
+/* ── STATS STRIP ──────────────────────────────────────────────── */
+.stats {
+  margin-top: 32px;
+  padding-top: 22px;
+  border-top: 1px solid #1c2128;
+  display: flex; gap: 28px; flex-wrap: wrap;
+}
+.stat { display:flex; flex-direction:column; gap:2px; }
+.sv { font-size:20px; font-weight:700; color:#58a6ff; }
+.sl { font-size:10px; color:#555f6d; letter-spacing:1.5px; text-transform:uppercase; }
+
+</style>
+</head>
+<body>
+
+<div class="win">
+  <div class="titlebar">
+    <div class="dots">
+      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+    </div>
+    <div class="tb-title">bash — km-agent — expanded tree with functions — 120×60</div>
+  </div>
+
+  <div class="body">
+
+    <!-- prompt -->
+    <div class="prompt">
+      <span class="pu">dev</span><span class="pat">@</span><span class="ph">km-agent</span>
+      <span class="ps">:</span><span class="pp">~/projects</span>
+      <span class="ps">$</span>
+      <span class="pc">tree km-agent/ --dirsfirst -F --functions</span>
+      <span class="cursor"></span>
+    </div>
+
+    <div class="tree">
+
+      <!-- ROOT -->
+      <div class="tl">
+        <div class="file-wrap">
+          <span class="dir-icon">📁</span>
+          <span class="dir-name">km-agent/</span>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════
+           01  lambda_handler.py
+      ═════════════════════════════════════════════════════════ -->
+      <div class="tl">
+        <span class="cn">├── </span>
+        <div class="file-wrap">
+          <span class="fnum">01</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-entry">ENTRY POINT</span>
+          <span class="fname c-entry">lambda_handler.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">AWS Lambda entry · routes /chat + /feedback · cold start banner</span>
+        </div>
+      </div>
+      <!-- fn: handler -->
+      <div class="fn-line">
+        <span class="fn-cn">│   ├── </span>
+        <div class="fn-wrap">
+          <span class="fn-sig fn-entry">handler(event, context)</span>
+          <span class="fn-arrow">→</span>
+          <span class="fn-desc">parses path · generates correlation_id · routes to handle_chat / handle_feedback · HTTP 500 on any exception</span>
+          <span class="fn-call fc-entry">routes</span>
+        </div>
+      </div>
+      <!-- fn: handle_chat -->
+      <div class="fn-line">
+        <span class="fn-cn">│   ├── </span>
+        <div class="fn-wrap">
+          <span class="fn-sig fn-entry">handle_chat(body, cid)</span>
+          <span class="fn-arrow">→</span>
+          <span class="fn-desc">7-step pipeline: validate → beautify → save session → log start → run agents → save chat → return HTTP 200</span>
+          <span class="fn-call fc-entry">/chat</span>
+        </div>
+      </div>
+      <!-- fn: handle_feedback -->
+      <div class="fn-line">
+        <span class="fn-cn">│   └── </span>
+        <div class="fn-wrap">
+          <span class="fn-sig fn-entry">handle_feedback(body, cid)</span>
+          <span class="fn-arrow">→</span>
+          <span class="fn-desc">4-step pipeline: validate → save feedback → log event → return HTTP 200 with feedback_id</span>
+          <span class="fn-call fc-entry">/feedback</span>
+        </div>
+      </div>
+
+      <div class="gap-sm"></div>
+
+      <!-- ════════════════════════════════════════════════════════
+           02  message_processor.py
+      ═════════════════════════════════════════════════════════ -->
+      <div class="tl">
+        <span class="cn">├── </span>
+        <div class="file-wrap">
+          <span class="fnum">02</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-util">UTILITY</span>
+          <span class="fname c-util">message_processor.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">validate · sanitise · build all response shapes · zero external calls</span>
+        </div>
+      </div>
+      <div class="fn-line"><span class="fn-cn">│   ├── </span><div class="fn-wrap"><span class="fn-sig fn-util">validate_chat_request(body)</span><span class="fn-arrow">→</span><span class="fn-desc">checks 6 required fields · raises ValueError if any missing</span><span class="fn-call fc-util">validate</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   ├── </span><div class="fn-wrap"><span class="fn-sig fn-util">validate_feedback_request(body)</span><span class="fn-arrow">→</span><span class="fn-desc">checks 3 required fields · raises ValueError if any missing</span><span class="fn-call fc-util">validate</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   ├── </span><div class="fn-wrap"><span class="fn-sig fn-util">beautify_message(raw_text)</span><span class="fn-arrow">→</span><span class="fn-desc">strips HTML · collapses whitespace · trims · returns clean question</span><span class="fn-call fc-util">sanitise</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   ├── </span><div class="fn-wrap"><span class="fn-sig fn-util">build_chat_response(data)</span><span class="fn-arrow">→</span><span class="fn-desc">builds HTTP 200 JSON: answer · citations · intent · confidence · cid · latency_ms</span><span class="fn-call fc-util">build</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   ├── </span><div class="fn-wrap"><span class="fn-sig fn-util">build_feedback_response(data)</span><span class="fn-arrow">→</span><span class="fn-desc">builds HTTP 200 JSON: feedback_id · status="received" · cid</span><span class="fn-call fc-util">build</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   └── </span><div class="fn-wrap"><span class="fn-sig fn-util">build_error_response(error)</span><span class="fn-arrow">→</span><span class="fn-desc">builds HTTP 500 JSON with exact exception message · never generic fallback</span><span class="fn-call fc-util">build</span></div></div>
+
+      <div class="gap"></div>
+
+      <!-- ════════════════════════════════════════════════════════
+           db/
+      ═════════════════════════════════════════════════════════ -->
+      <div class="tl">
+        <span class="cn">├── </span>
+        <div class="file-wrap">
+          <span class="dir-icon">📂</span>
+          <span class="dir-name">db/</span>
+          <span class="dir-note">← SQLite persistence · /tmp/km_agent.db · 3 tables</span>
+        </div>
+      </div>
+
+      <!-- 03 sqlite_manager.py -->
+      <div class="tl">
+        <span class="cn">│   └── </span>
+        <div class="file-wrap">
+          <span class="fnum">03</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-db">DATABASE</span>
+          <span class="fname c-db">sqlite_manager.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">all CRUD · sessions · chat_history · feedback · thread-safe Lock()</span>
+        </div>
+      </div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-db">init_db()</span><span class="fn-arrow">→</span><span class="fn-desc">creates all 3 tables on cold start if not exist</span><span class="fn-call fc-db">DDL</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-db">save_session(session_id, ...)</span><span class="fn-arrow">→</span><span class="fn-desc">INSERT/UPDATE sessions row · stores token_hash (SHA256) · never raw token</span><span class="fn-call fc-db">INSERT</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-db">update_last_active(session_id)</span><span class="fn-arrow">→</span><span class="fn-desc">stamps last_active = now on every /chat request</span><span class="fn-call fc-db">UPDATE</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-db">save_chat(correlation_id, ...)</span><span class="fn-arrow">→</span><span class="fn-desc">saves full Q&A + citations JSON + intent + latency + agent_trace JSON</span><span class="fn-call fc-db">INSERT</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-db">save_feedback(feedback_id, ...)</span><span class="fn-arrow">→</span><span class="fn-desc">saves thumbs_up / thumbs_down + comment linked via correlation_id</span><span class="fn-call fc-db">INSERT</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-db">get_chat_history(session_id, limit)</span><span class="fn-arrow">→</span><span class="fn-desc">returns last N chats for session · used by orchestrator for context</span><span class="fn-call fc-db">SELECT</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       └── </span><div class="fn-wrap"><span class="fn-sig fn-db">get_session(session_id)</span><span class="fn-arrow">→</span><span class="fn-desc">returns session row or None · used to decide INSERT vs UPDATE</span><span class="fn-call fc-db">SELECT</span></div></div>
+
+      <div class="gap"></div>
+
+      <!-- ════════════════════════════════════════════════════════
+           agents/
+      ═════════════════════════════════════════════════════════ -->
+      <div class="tl">
+        <span class="cn">├── </span>
+        <div class="file-wrap">
+          <span class="dir-icon">📂</span>
+          <span class="dir-name">agents/</span>
+          <span class="dir-note">← AWS Strands Framework · 3 Claude agents via Bedrock</span>
+        </div>
+      </div>
+
+      <!-- 04 orchestrator_agent.py -->
+      <div class="tl">
+        <span class="cn">│   ├── </span>
+        <div class="file-wrap">
+          <span class="fnum">04</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-orch">TEAM LEAD</span>
+          <span class="fname c-orch">orchestrator_agent.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">Claude Opus · plans · delegates · retries max 2× · raises MaxRetriesError</span>
+        </div>
+      </div>
+      <div class="fn-line"><span class="fn-cn">│   │   ├── </span><div class="fn-wrap"><span class="fn-sig fn-orch">run(question, session_id, cid, token)</span><span class="fn-arrow">→</span><span class="fn-desc">main loop · plan → delegate → validate → evaluate · retries 2× on REJECTED</span><span class="fn-call fc-orch">Bedrock Opus</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   │   ├── </span><div class="fn-wrap"><span class="fn-sig fn-orch">plan_task(question)</span><span class="fn-arrow">→</span><span class="fn-desc">Bedrock Opus call · generates execution plan for retrieval_agent delegation</span><span class="fn-call fc-orch">Bedrock Opus</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   │   ├── </span><div class="fn-wrap"><span class="fn-sig fn-orch">evaluate_validation(result)</span><span class="fn-arrow">→</span><span class="fn-desc">Bedrock Opus call · APPROVE if confidence &gt; 0.85 · else RETRY with reason</span><span class="fn-call fc-orch">Bedrock Opus</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   │   └── </span><div class="fn-wrap"><span class="fn-sig fn-orch">finalize_answer(draft, citations)</span><span class="fn-arrow">→</span><span class="fn-desc">formats approved answer + builds agent_trace JSON for audit trail</span><span class="fn-call fc-orch">internal</span></div></div>
+
+      <div class="gap-sm"></div>
+
+      <!-- 05 retrieval_agent.py -->
+      <div class="tl">
+        <span class="cn">│   ├── </span>
+        <div class="file-wrap">
+          <span class="fnum">05</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-ret">JUNIOR DEV</span>
+          <span class="fname c-ret">retrieval_agent.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">Claude Sonnet · runs 3-tool pipeline · synthesises draft + citations</span>
+        </div>
+      </div>
+      <div class="fn-line"><span class="fn-cn">│   │   ├── </span><div class="fn-wrap"><span class="fn-sig fn-ret">run(question, plan, cid, token)</span><span class="fn-arrow">→</span><span class="fn-desc">entry · runs tool pipeline → synthesise draft · returns draft + citations to orchestrator</span><span class="fn-call fc-ret">delegate</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   │   ├── </span><div class="fn-wrap"><span class="fn-sig fn-ret">run_tool_pipeline(question, intent)</span><span class="fn-arrow">→</span><span class="fn-desc">calls tools 07 → 08 → 09 in strict sequence · passes output of each as input to next</span><span class="fn-call fc-ret">tools ×3</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   │   └── </span><div class="fn-wrap"><span class="fn-sig fn-ret">synthesize_draft(docs, question)</span><span class="fn-arrow">→</span><span class="fn-desc">Bedrock Sonnet call · grounded draft with inline citations from retrieved docs</span><span class="fn-call fc-ret">Bedrock Sonnet</span></div></div>
+
+      <div class="gap-sm"></div>
+
+      <!-- 06 validation_agent.py -->
+      <div class="tl">
+        <span class="cn">│   └── </span>
+        <div class="file-wrap">
+          <span class="fnum">06</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-val">SENIOR QA</span>
+          <span class="fname c-val">validation_agent.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">Claude Sonnet · hallucination check · APPROVED &gt; 0.85 · REJECTED → retry</span>
+        </div>
+      </div>
+      <div class="fn-line"><span class="fn-cn">        ├── </span><div class="fn-wrap"><span class="fn-sig fn-val">validate(draft_answer, docs, cid)</span><span class="fn-arrow">→</span><span class="fn-desc">entry · runs all checks · returns {result, confidence, reason} to orchestrator</span><span class="fn-call fc-val">orchestrate</span></div></div>
+      <div class="fn-line"><span class="fn-cn">        ├── </span><div class="fn-wrap"><span class="fn-sig fn-val">check_hallucinations(answer, docs)</span><span class="fn-arrow">→</span><span class="fn-desc">Bedrock Sonnet call · verifies every claim is grounded in retrieved documents</span><span class="fn-call fc-val">Bedrock Sonnet</span></div></div>
+      <div class="fn-line"><span class="fn-cn">        ├── </span><div class="fn-wrap"><span class="fn-sig fn-val">verify_citations(answer, docs)</span><span class="fn-arrow">→</span><span class="fn-desc">checks title exists · URL valid · snippet matches source text</span><span class="fn-call fc-val">verify</span></div></div>
+      <div class="fn-line"><span class="fn-cn">        └── </span><div class="fn-wrap"><span class="fn-sig fn-val">score_confidence(checks)</span><span class="fn-arrow">→</span><span class="fn-desc">combines hallucination + citation scores → APPROVED (&gt;0.85) or REJECTED + reason</span><span class="fn-call fc-val">score</span></div></div>
+
+      <div class="gap"></div>
+
+      <!-- ════════════════════════════════════════════════════════
+           tools/
+      ═════════════════════════════════════════════════════════ -->
+      <div class="tl">
+        <span class="cn">├── </span>
+        <div class="file-wrap">
+          <span class="dir-icon">📂</span>
+          <span class="dir-name">tools/</span>
+          <span class="dir-note">← called by retrieval_agent.run_tool_pipeline() · sequence: 07 → 08 → 09</span>
+        </div>
+      </div>
+
+      <!-- 07 intent_classifier.py -->
+      <div class="tl">
+        <span class="cn">│   ├── </span>
+        <div class="file-wrap">
+          <span class="fnum">07</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-t1">TOOL 1</span>
+          <span class="fname c-t1">intent_classifier.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">Bedrock Sonnet · 7 categories · first in pipeline · raises on failure</span>
+        </div>
+      </div>
+      <div class="fn-line"><span class="fn-cn">│   │   ├── </span><div class="fn-wrap"><span class="fn-sig fn-t1">classify(question, session_id, cid)</span><span class="fn-arrow">→</span><span class="fn-desc">Bedrock Sonnet call · returns {intent, confidence} · SOP/Policy/Salesforce/SOR/Claims/HR/General</span><span class="fn-call fc-t1">Bedrock Sonnet</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   │   └── </span><div class="fn-wrap"><span class="fn-sig fn-t1">build_classification_prompt(question)</span><span class="fn-arrow">→</span><span class="fn-desc">builds few-shot prompt · 2 examples × 7 categories (14 total) · JSON output only</span><span class="fn-call fc-t1">prompt</span></div></div>
+
+      <div class="gap-sm"></div>
+
+      <!-- 08 query_enhancer.py -->
+      <div class="tl">
+        <span class="cn">│   ├── </span>
+        <div class="file-wrap">
+          <span class="fnum">08</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-t2">TOOL 2</span>
+          <span class="fname c-t2">query_enhancer.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">Bedrock Sonnet · intent-aware · 3 query variants · raises on failure</span>
+        </div>
+      </div>
+      <div class="fn-line"><span class="fn-cn">│   │   ├── </span><div class="fn-wrap"><span class="fn-sig fn-t2">enhance(question, intent, cid)</span><span class="fn-arrow">→</span><span class="fn-desc">Bedrock Sonnet call · returns 3 enhanced query strings tuned for classified intent</span><span class="fn-call fc-t2">Bedrock Sonnet</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│   │   └── </span><div class="fn-wrap"><span class="fn-sig fn-t2">build_enhancement_prompt(q, intent)</span><span class="fn-arrow">→</span><span class="fn-desc">intent-aware prompt · expand acronyms · add synonyms · keyword fallback · JSON array output</span><span class="fn-call fc-t2">prompt</span></div></div>
+
+      <div class="gap-sm"></div>
+
+      <!-- 09 graph_rag_search.py -->
+      <div class="tl">
+        <span class="cn">│   └── </span>
+        <div class="file-wrap">
+          <span class="fnum">09</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-t3">TOOL 3</span>
+          <span class="fname c-t3">graph_rag_search.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">OBO → Azure AD → MS Graph RAG → SharePoint · 0 results raises · never logs token</span>
+        </div>
+      </div>
+      <div class="fn-line"><span class="fn-cn">        ├── </span><div class="fn-wrap"><span class="fn-sig fn-t3">search(queries, user_token, cid)</span><span class="fn-arrow">→</span><span class="fn-desc">entry · OBO exchange → Graph RAG call → dedup · raises NoDocumentsError if 0 results</span><span class="fn-call fc-t3">orchestrate</span></div></div>
+      <div class="fn-line"><span class="fn-cn">        ├── </span><div class="fn-wrap"><span class="fn-sig fn-t3">exchange_obo_token(user_token)</span><span class="fn-arrow">→</span><span class="fn-desc">Azure AD OBO flow · Teams token → Graph API token · NEVER logs raw token · raises OBOTokenError</span><span class="fn-call fc-t3">Azure AD</span></div></div>
+      <div class="fn-line"><span class="fn-cn">        ├── </span><div class="fn-wrap"><span class="fn-sig fn-t3">run_graph_rag(queries, graph_token)</span><span class="fn-arrow">→</span><span class="fn-desc">POSTs 3 queries to MS Graph RAG API · searches SharePoint + OneDrive · returns raw docs</span><span class="fn-call fc-t3">MS Graph RAG</span></div></div>
+      <div class="fn-line"><span class="fn-cn">        └── </span><div class="fn-wrap"><span class="fn-sig fn-t3">deduplicate_results(results)</span><span class="fn-arrow">→</span><span class="fn-desc">dedupes by URL · ranks by relevance · returns top 5 unique docs</span><span class="fn-call fc-t3">internal</span></div></div>
+
+      <div class="gap"></div>
+
+      <!-- ════════════════════════════════════════════════════════
+           monitoring/
+      ═════════════════════════════════════════════════════════ -->
+      <div class="tl">
+        <span class="cn">├── </span>
+        <div class="file-wrap">
+          <span class="dir-icon">📂</span>
+          <span class="dir-name">monitoring/</span>
+          <span class="dir-note">← structured JSON logs + 5 custom CloudWatch metrics</span>
+        </div>
+      </div>
+
+      <!-- 10 cloudwatch_logger.py -->
+      <div class="tl">
+        <span class="cn">│   └── </span>
+        <div class="file-wrap">
+          <span class="fnum">10</span>
+          <span class="ficon">🐍</span>
+          <span class="fbadge b-mon">MONITORING</span>
+          <span class="fname c-mon">cloudwatch_logger.py</span>
+          <span class="farrow">←</span>
+          <span class="fnote">namespace KMAgent · latency · errors · login_count · feedback · every log has cid</span>
+        </div>
+      </div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-mon">log_request(user_id, endpoint, cid)</span><span class="fn-arrow">→</span><span class="fn-desc">logs incoming request · publishes login_count +1 metric</span><span class="fn-call fc-mon">CloudWatch</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-mon">log_completion(cid, latency_ms, intent)</span><span class="fn-arrow">→</span><span class="fn-desc">logs /chat success · publishes latency_ms + intent_distribution metrics</span><span class="fn-call fc-mon">CloudWatch</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-mon">log_error(cid, error, exc_info)</span><span class="fn-arrow">→</span><span class="fn-desc">ERROR level + full stack trace · publishes error_rate +1 metric</span><span class="fn-call fc-mon">CloudWatch</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-mon">log_login(user_id, session_id, cid)</span><span class="fn-arrow">→</span><span class="fn-desc">audit log for new session creation · compliance trail · fires once per new session</span><span class="fn-call fc-mon">CloudWatch</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       ├── </span><div class="fn-wrap"><span class="fn-sig fn-mon">log_feedback(cid, feedback_type)</span><span class="fn-arrow">→</span><span class="fn-desc">logs feedback event · publishes feedback_count +1 with type dimension</span><span class="fn-call fc-mon">CloudWatch</span></div></div>
+      <div class="fn-line"><span class="fn-cn">│       └── </span><div class="fn-wrap"><span class="fn-sig fn-mon">put_metric(name, value, unit, dims)</span><span class="fn-arrow">→</span><span class="fn-desc">generic metric publisher · all log_* functions call this · namespace=KMAgent</span><span class="fn-call fc-mon">boto3</span></div></div>
+
+      <div class="gap"></div>
+
+      <!-- ════════════════════════════════════════════════════════
+           config files
+      ═════════════════════════════════════════════════════════ -->
+      <div class="tl">
+        <span class="cn">├── </span>
+        <div class="file-wrap">
+          <span class="ficon">📄</span>
+          <span class="fbadge" style="background:rgba(107,114,128,.1);color:#6b7280;border:1px solid rgba(107,114,128,.2);">CONFIG</span>
+          <span class="fname c-cfg">requirements.txt</span>
+          <span class="farrow">←</span>
+          <span class="fnote">boto3 · strands-agents · requests · python-dotenv</span>
+        </div>
+      </div>
+      <div class="tl">
+        <span class="cn">└── </span>
+        <div class="file-wrap">
+          <span class="ficon">📄</span>
+          <span class="fbadge" style="background:rgba(107,114,128,.1);color:#6b7280;border:1px solid rgba(107,114,128,.2);">CONFIG</span>
+          <span class="fname c-cfg">.env.template</span>
+          <span class="farrow">←</span>
+          <span class="fnote">16 env vars · Bedrock model IDs · Azure AD credentials · SharePoint URL · SQLite path</span>
+        </div>
+      </div>
+
+    </div><!-- /tree -->
+
+    <!-- stats -->
+    <div class="stats">
+      <div class="stat"><span class="sv">10</span><span class="sl">Python Files</span></div>
+      <div class="stat"><span class="sv">41</span><span class="sl">Functions</span></div>
+      <div class="stat"><span class="sv">4</span><span class="sl">Folders</span></div>
+      <div class="stat"><span class="sv">3</span><span class="sl">Agents</span></div>
+      <div class="stat"><span class="sv">3</span><span class="sl">Tools</span></div>
+      <div class="stat"><span class="sv">3</span><span class="sl">SQLite Tables</span></div>
+      <div class="stat"><span class="sv">6+</span><span class="sl">Bedrock Calls/Req</span></div>
+      <div class="stat"><span class="sv">0</span><span class="sl">Fallbacks</span></div>
+    </div>
+
+  </div><!-- /body -->
+</div><!-- /win -->
+
+</body>
+</html>
